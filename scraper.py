@@ -73,6 +73,11 @@ with sync_playwright() as p:
     ltp = float(cols.nth(9).inner_text().split("(")[0].replace(",", ""))
 
     previous_close = float(cols.nth(10).inner_text().replace(",", ""))
+    
+    difference = round(ltp - previous_close, 2)
+
+    epochdate = int(datetime.now().timestamp())
+
 
     # Print scraped data
     for i in range(cols.count()):
@@ -90,9 +95,11 @@ with sync_playwright() as p:
         traded_value,
         total_trades,
         ltp,
-        previous_close
+        previous_close,
+        difference,
+        epochdate
     )
-    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
     """
 
     values = (
@@ -105,7 +112,9 @@ with sync_playwright() as p:
         traded_value,
         total_trades,
         ltp,
-        previous_close
+        previous_close,
+        difference,
+        epochdate
     )
 
     cursor.execute(sql, values)
