@@ -15,6 +15,18 @@ with sync_playwright() as p:
     page.goto("https://nepalstock.com/today-price")
     page.wait_for_load_state("networkidle")
 
+    today = datetime.now().strftime("%b %d, %Y").replace(" 0", " ")
+
+    as_of_text = page.locator("div.ticker__date span").inner_text()
+
+    print("Website:", as_of_text)
+    print("Today:", today)
+
+    if not as_of_text.startswith(today):
+        print("Today's stock data is not available yet.")
+        browser.close()
+        exit()
+
     # Search company
     textbox = page.get_by_role(
         "textbox",
@@ -59,7 +71,16 @@ with sync_playwright() as p:
 
     cursor = conn.cursor()
 
-    close_price = float(cols.nth(2).inner_text().replace(",", ""))
+    close_text = cols.nth(2).inner_text().strip()
+
+    ltp = float(
+        cols.nth(9).inner_text().split("(")[0].replace(",", "")
+    )
+
+    if close_text in ("", "-"):
+        close_price = ltp
+    else:
+        close_price = float(close_text.replace(",", ""))
     open_price = float(cols.nth(3).inner_text().replace(",", ""))
     high_price = float(cols.nth(4).inner_text().replace(",", ""))
     low_price = float(cols.nth(5).inner_text().replace(",", ""))
@@ -69,8 +90,6 @@ with sync_playwright() as p:
     traded_value = float(cols.nth(7).inner_text().replace(",", ""))
 
     total_trades = int(cols.nth(8).inner_text().replace(",", ""))
-
-    ltp = float(cols.nth(9).inner_text().split("(")[0].replace(",", ""))
 
     previous_close = float(cols.nth(10).inner_text().replace(",", ""))
     
